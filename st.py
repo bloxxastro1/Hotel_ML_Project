@@ -169,16 +169,24 @@ train_balanced = pd.concat([df_majority, df_minority_upsampled])
 X_train= train_balanced.drop(columns=['is_canceled'])
 y_train = train_balanced['is_canceled']
 
-def compute_iqr_bounds(series, factor=1.5):
-    q1 = series.quantile(0.25)
-    q3 = series.quantile(0.75)
-    iqr = q3 - q1
-    return q1 - factor * iqr, q3 + factor * iqr
+train_df = pd.concat([X_train, y_train], axis=1)
 
-for col in X_train.select_dtypes(include=['int64', 'float64']).columns:
-        lower, upper = compute_iqr_bounds(X_train[col])
-        X_train[col] = X_train[col].clip(lower, upper)
-        X_test[col]  = X_test[col].clip(lower, upper)
+df_minority = train_df[train_df.is_canceled == 1]
+df_majority = train_df[train_df.is_canceled == 0]
+
+df_minority_upsampled = resample(
+    df_minority,
+    replace=True,
+    n_samples=len(df_majority),
+    random_state=42
+)
+
+train_balanced = pd.concat([df_majority, df_minority_upsampled])
+
+# Separate back
+X_train= train_balanced.drop(columns=['is_canceled'])
+y_train = train_balanced['is_canceled']
+
 
 # ===============================
 # Preprocessing Pipeline
@@ -247,6 +255,7 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write("ROC-AUC:", roc_auc)
+
 
 
 
