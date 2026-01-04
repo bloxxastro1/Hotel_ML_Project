@@ -29,7 +29,8 @@ df = pd.read_csv(url)
 
 st.subheader("Raw Data Preview")
 st.dataframe(df.head())
-
+st.write(df.describe())
+st.write(df.info()
 # ===============================
 # Data Cleaning
 # ===============================
@@ -45,7 +46,6 @@ df.drop(columns=leakage_cols, inplace=True)
 df.dropna(subset=['children', 'country'], inplace=True)
 df['market_segment'].replace("Undefined", np.nan, inplace=True)
 df.dropna(subset=['market_segment'], inplace=True)
-
 # Fix data types
 df['children'] = df['children'].astype(int)
 for col in df.columns:
@@ -84,11 +84,87 @@ st.dataframe(df.head())
 # ===============================
 st.subheader("Univariate Analysis")
 
-num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+df_analysis = df.copy()
 
+# Drop index column if exists
+if 'index' in df_analysis.columns:
+    df_analysis.drop(columns=['index'], inplace=True)
+
+# Impute missing 'agent' values with median
+df_analysis['agent'].fillna(df_analysis['agent'].median(), inplace=True)
+
+st.subheader("Dataset Info")
+st.text(df_analysis.info())
+
+# ===============================
+# Numeric Visualization Function
+# ===============================
+def num_visualization(df_analysis, col):
+    fig_box = px.box(df_analysis, y=col, title=f"Boxplot of {col}")
+    st.plotly_chart(fig_box, use_container_width=True)
+    
+    fig_hist = px.histogram(df_analysis, x=col, nbins=50, title=f"Histogram of {col}")
+    st.plotly_chart(fig_hist, use_container_width=True)
+
+# Loop over numeric columns
+num_cols = df_analysis.select_dtypes(include=['int64', 'float64']).columns.tolist()
 for col in num_cols:
-    fig = plt.hist(df, x=df[col], title=f"Distribution of {col}")
-    st.plotly_chart(fig, use_container_width=True)
+    num_visualization(df_analysis, col)
+    st.write("-" * 50)
+    st.write(df_analysis[col].describe())
+
+# ===============================
+# Categorical Column Summaries
+# ===============================
+cat_cols = df_analysis.select_dtypes(include=["object"]).columns.tolist()
+for col in cat_cols:
+    st.write("-" * 50)
+    st.write(col)
+    st.write(df_analysis[col].value_counts(normalize=True))
+
+# ===============================
+# Pie Charts for Selected Categorical Columns
+# ===============================
+
+# Top 10 cities
+vc = df_analysis['city'].value_counts(normalize=True)
+top_10_cities = vc.head(10)
+fig_cities = px.pie(data_frame=top_10_cities, names=top_10_cities.index, values=top_10_cities.values,
+                    title='Top 10 Cities by Proportion of Bookings')
+st.plotly_chart(fig_cities, use_container_width=True)
+
+# Customer type
+vc = df_analysis['customer_type'].value_counts(normalize=True)
+top_2 = vc.head(2)
+others_sum = vc.iloc[2:].sum()
+top_2 = top_2.append(pd.Series([others_sum], index=['Other']))
+fig_customer = px.pie(data_frame=top_2, names=top_2.index, values=top_2.values, title='Customer Types Distribution')
+st.plotly_chart(fig_customer, use_container_width=True)
+
+# Market segment
+fig_market = px.pie(df_analysis, names='market_segment', title='Distribution of Market Segment Types')
+st.plotly_chart(fig_market, use_container_width=True)
+
+# Meal types
+fig_meal = px.pie(df_analysis, names='meal', title='Proportion of Meal Types')
+st.plotly_chart(fig_meal, use_container_width=True)
+
+# Top 10 countries
+vc = df_analysis['country'].value_counts(normalize=True)
+top_10_countries = vc.head(9)
+others_sum = vc.iloc[9:].sum()
+top_10_countries = top_10_countries.append(pd.Series([others_sum], index=['Other']))
+fig_country = px.pie(data_frame=top_10_countries, names=top_10_countries.index, values=top_10_countries.values,
+                     title='Top 10 Countries by Proportion of Bookings')
+st.plotly_chart(fig_country, use_container_width=True)
+
+# Cancellations
+fig_cancellation = px.pie(df_analysis, names='is_canceled',
+                          title='Distribution of Cancellations',
+                          color='is_canceled',
+                          color_discrete_map={0: 'green', 1: 'red'})
+st.plotly_chart(fig_cancellation, use_container_width=True)
+
 
 # ===============================
 # Bivariate Analysis
@@ -100,6 +176,49 @@ for col in num_cols:
         fig = px.box(df, x='is_canceled', y=col, title=f"{col} vs Cancellation")
         st.plotly_chart(fig, use_container_width=True)
 
+def cross_tabulation(df, col1, col2="is_canceled"):
+    ct = pd.crosstab(df[col1], df[col2], normalize='index') * 100
+    st.write(f"Cross-tabulation of {col1} vs {col2}")
+    st.dataframe(ct.round(2))
+
+cat_cols = [col for col in df_analysis.columns if df_analysis[col].dtype == 'object' and col != 'is_canceled']
+for col in cat_cols:
+    cross_tabulation(df_analysis, col)
+
+for col in cat_cols:
+    fig = px.histogram(df_analysis, x=col, color='is_canceled',
+                       barmode='group',
+                       title=f'Cancellations by {col} (Grouped)')
+    st.plotly_chart(fig, use_container_width=True)
+from scipy.stats import ttest_ind
+
+st.subheader("T-tests for Numeric Features")
+
+for col in num_cols:
+    col_group1 = df_analysis[df_analysis['is_canceled'] == 1][col]
+    col_group2 = df_analysis[df_analysis['is_canceled'] == 0][col]
+
+    t_stat, p_value = ttest_ind(
+        col_group1,
+        col_group2,
+        equal_var=False,
+        nan_policy='omit'
+    )
+
+    st.write(f"**{col}**")
+    st.write(f"T-statistic: {t_stat:.4f}, P-value: {p_value:.4f}")
+    st.write("---")
+from scipy.stats import chi2_contingency
+
+st.subheader("Chi-square Test for Categorical Features")
+
+for col in cat_cols:
+    table = pd.crosstab(df_analysis[col], df_analysis['is_canceled'])
+    chi2, p_value, dof, expected = chi2_contingency(table)
+
+    st.write(f"**{col}**")
+    st.write(f"Chi-square: {chi2:.4f}, P-value: {p_value:.4f}, Degrees of Freedom: {dof}")
+    st.write("---")
 # ===============================
 # Correlation Heatmap
 # ===============================
@@ -110,6 +229,18 @@ corr = df.select_dtypes(include=['int64', 'float64']).corr()
 fig, ax = plt.subplots(figsize=(14, 10))
 sns.heatmap(corr, cmap='coolwarm', center=0, ax=ax)
 st.pyplot(fig)
+num_cols = [
+    'lead_time',
+    'required_car_parking_spaces',
+    'total_of_special_requests',
+    'is_canceled'
+]
+
+df_pair = df_analysis[num_cols]
+
+st.subheader("Pairplot of Selected Numeric Features")
+pair_fig = sns.pairplot(df_pair, hue='is_canceled', diag_kind='kde')
+st.pyplot(pair_fig.fig)  # Use .fig to get the figure object
 
 # ===============================
 # Train-Test Split
@@ -214,6 +345,7 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
 
 
 
