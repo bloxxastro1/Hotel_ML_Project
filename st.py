@@ -51,9 +51,10 @@ for col in df.columns:
     if df[col].nunique() == 2:
         df[col] = df[col].astype('object')
 
-# Log-transform numeric columns
+# Log-transform numeric columns safely
 num_cols_log = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-num_cols_log.remove('is_canceled')  # do NOT transform target
+if 'is_canceled' in num_cols_log:
+    num_cols_log.remove('is_canceled')  # do NOT transform target
 for col in num_cols_log:
     df[col] = np.log1p(df[col])
 
