@@ -169,7 +169,16 @@ train_balanced = pd.concat([df_majority, df_minority_upsampled])
 X_train= train_balanced.drop(columns=['is_canceled'])
 y_train = train_balanced['is_canceled']
 
+def compute_iqr_bounds(series, factor=1.5):
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+    return q1 - factor * iqr, q3 + factor * iqr
 
+for col in X_train.select_dtypes(include=['int64', 'float64']).columns:
+        lower, upper = compute_iqr_bounds(X_train[col])
+        X_train[col] = X_train[col].clip(lower, upper)
+        X_test[col]  = X_test[col].clip(lower, upper)
 
 # ===============================
 # Preprocessing Pipeline
@@ -182,7 +191,7 @@ num_pipe = Pipeline([
 ])
 
 cat_pipe = Pipeline([
-    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=True))
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
 ])
 
 preprocessor = ColumnTransformer([
@@ -238,5 +247,6 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write("ROC-AUC:", roc_auc)
+
 
 
