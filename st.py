@@ -33,7 +33,8 @@ st.title("Machine Learning Model to Predict Hotel Cancellation")
 # ===============================
 # Load Data
 # ===============================
-df = pd.read_csv("hotel_bookings.csv")
+url = "https://github.com/bloxxastro1/Hotel_ML_Project/blob/main/hotel_bookings_updated_2024.csv"
+df = pd.read_csv(url)
 
 # ===============================
 # Data Understanding
@@ -237,3 +238,4 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write("ROC-AUC:", roc_auc)
+
