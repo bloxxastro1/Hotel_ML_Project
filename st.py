@@ -4,6 +4,7 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
+import plotly as px 
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split, cross_validate, StratifiedKFold
@@ -213,4 +214,5 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
 
