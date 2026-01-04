@@ -30,7 +30,7 @@ df = pd.read_csv(url)
 st.subheader("Raw Data Preview")
 st.dataframe(df.head())
 st.write(df.describe())
-st.write(df.info()
+st.write(df.info())
 # ===============================
 # Data Cleaning
 # ===============================
@@ -345,6 +345,7 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
 
 
 
