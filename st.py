@@ -1,3 +1,6 @@
+# ===============================
+# Imports
+# ===============================
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -57,25 +60,30 @@ df.reset_index(drop=True, inplace=True)
 # Train-Test Split
 # ===============================
 X = df.drop('is_canceled', axis=1)
-y = df['is_canceled']
+y = df['is_canceled'].astype(int)  # Ensure target is int
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
 # ===============================
-# Handle Class Imbalance (only once)
+# Handle Class Imbalance
 # ===============================
 train_df = pd.concat([X_train, y_train], axis=1)
 df_minority = train_df[train_df.is_canceled == 1]
 df_majority = train_df[train_df.is_canceled == 0]
 
 df_minority_upsampled = resample(
-    df_minority, replace=True, n_samples=len(df_majority), random_state=42
+    df_minority,
+    replace=True,
+    n_samples=len(df_majority),
+    random_state=42
 )
+
 train_balanced = pd.concat([df_majority, df_minority_upsampled])
+
 X_train = train_balanced.drop(columns=['is_canceled'])
-y_train = train_balanced['is_canceled']
+y_train = train_balanced['is_canceled'].astype(int)  # <- ensure int
 
 # ===============================
 # Preprocessing Pipeline
