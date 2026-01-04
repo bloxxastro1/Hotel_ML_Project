@@ -110,8 +110,8 @@ preprocessor = ColumnTransformer([
 pipeline = Pipeline([
     ('preprocess', preprocessor),
     ('model', RandomForestClassifier(
-        n_estimators=300,
-        max_depth=20,
+        n_estimators=100,
+        max_depth=15,
         min_samples_split=5,
         min_samples_leaf=1,
         max_features='sqrt',
@@ -155,3 +155,4 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write("ROC-AUC:", roc_auc)
+
