@@ -84,7 +84,7 @@ st.dataframe(df.head())
 # ===============================
 st.subheader("Univariate Analysis")
 
-num_cols = df.select_dtypes(include=['int64', 'float64']).columns
+num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
 for col in num_cols:
     fig = plt.histogram(df, x=col, title=f"Distribution of {col}")
@@ -214,6 +214,7 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
 
 
 
