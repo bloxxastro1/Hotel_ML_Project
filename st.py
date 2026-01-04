@@ -137,7 +137,7 @@ st.plotly_chart(fig_cities, use_container_width=True)
 vc = df_analysis['customer_type'].value_counts(normalize=True)
 top_2 = vc.head(2)
 others_sum = vc.iloc[2:].sum()
-top_2 = top_2.concat(pd.Series([top_2], [others_sum]))
+top_2 = pd.concat([top_2, pd.Series(data=[others_sum], index=['Others'])])
 fig_customer = px.pie(data_frame=top_2, names=top_2.index, values=top_2.values, title='Customer Types Distribution')
 st.plotly_chart(fig_customer, use_container_width=True)
 
@@ -153,7 +153,7 @@ st.plotly_chart(fig_meal, use_container_width=True)
 vc = df_analysis['country'].value_counts(normalize=True)
 top_10_countries = vc.head(9)
 others_sum = vc.iloc[9:].sum()
-top_10_countries = top_10_countries.concat(pd.Series([top_10_countries][others_sum]))
+top_10_countries = pd.concat([top_10_countries, pd.Series([others_sum], index=['Others'])])
 fig_country = px.pie(data_frame=top_10_countries, names=top_10_countries.index, values=top_10_countries.values,
                      title='Top 10 Countries by Proportion of Bookings')
 st.plotly_chart(fig_country, use_container_width=True)
@@ -345,6 +345,7 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
 
 
 
