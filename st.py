@@ -78,6 +78,37 @@ df.reset_index(drop=True, inplace=True)
 
 st.subheader("Cleaned Data Preview")
 st.dataframe(df.head())
+# ===============================
+# Univariate Analysis
+# ===============================
+st.subheader("Univariate Analysis")
+
+num_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+for col in num_cols:
+    fig = px.histogram(df, x=col, title=f"Distribution of {col}")
+    st.plotly_chart(fig, use_container_width=True)
+
+# ===============================
+# Bivariate Analysis
+# ===============================
+st.subheader("Bivariate Analysis")
+
+for col in num_cols:
+    if col != 'is_canceled':
+        fig = px.box(df, x='is_canceled', y=col, title=f"{col} vs Cancellation")
+        st.plotly_chart(fig, use_container_width=True)
+
+# ===============================
+# Correlation Heatmap
+# ===============================
+st.subheader("Correlation Matrix")
+
+corr = df.select_dtypes(include=['int64', 'float64']).corr()
+
+fig, ax = plt.subplots(figsize=(14, 10))
+sns.heatmap(corr, cmap='coolwarm', center=0, ax=ax)
+st.pyplot(fig)
 
 # ===============================
 # Train-Test Split
@@ -182,3 +213,4 @@ st.pyplot(fig)
 
 roc_auc = roc_auc_score(y_test, y_proba)
 st.write(f"ROC-AUC Score: {roc_auc:.4f}")
+
