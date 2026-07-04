@@ -1,0 +1,45 @@
+1. Project title
+
+Hotel Reservation Cancellation Prediction
+
+2. Short description
+
+Machine learning project that predicts whether a hotel reservation will be canceled using booking data.
+
+3. Dataset
+
+119,590 hotel booking records.
+
+4. Tools
+
+Python, Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn.
+
+5. Workflow
+
+Data cleaning
+
+Missing value handling
+
+Exploratory data analysis
+
+Feature engineering
+
+Model training
+
+Model evaluation
+
+6. Results
+
+Model: Random Forest
+
+F1-score: 76%
+
+ROC-AUC: 84%
+
+7. How to run
+
+1. Clone the repository
+
+2. Install requirements
+
+3. Run the notebook
